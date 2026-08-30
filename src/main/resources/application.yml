@@ -23,3 +23,9 @@ management:
 demo:
   weather:
     default-delay: 5s        # simulated upstream latency when the request omits ?delayMs
+  cors:
+    # Only needed when the teaching page is served from its own origin. `npm run dev` proxies
+    # /api and /actuator instead, which makes those calls same-origin and this list unused.
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:4173
