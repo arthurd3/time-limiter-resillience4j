@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/*
+ * Palette from the validated reference instance. The two lane hues (blue, violet) were checked
+ * with the palette validator as a categorical pair and pass every gate:
+ *   CVD separation ΔE 13.0 (deutan) · normal-vision ΔE 16.3 · both >= 3:1 on the surface.
+ *
+ * Outcome colours are STATUS, not series. good/critical collide badly under deuteranopia
+ * (ΔE 4.1), and warning sits at 1.79:1 on the light surface -- so an outcome is never rendered
+ * as colour alone. <Outcome> always draws a glyph and a text label alongside the colour.
+ */
+@theme {
+  --color-surface: #fcfcfb;
+  --color-plane: #f9f9f7;
+  --color-ink: #0b0b0b;
+  --color-ink-2: #52514e;
+  --color-ink-muted: #898781;
+  --color-grid: #e1e0d9;
+  --color-axis: #c3c2b7;
+  --color-hairline: rgb(11 11 11 / 0.10);
+
+  --color-caller: #2a78d6;
+  --color-worker: #4a3aa7;
+
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-critical: #d03b3b;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-surface: #1a1a19;
+    --color-plane: #0d0d0d;
+    --color-ink: #ffffff;
+    --color-ink-2: #c3c2b7;
+    --color-ink-muted: #898781;
+    --color-grid: #2c2c2a;
+    --color-axis: #383835;
+    --color-hairline: rgb(255 255 255 / 0.10);
+
+    --color-caller: #3987e5;
+    --color-worker: #9085e9;
+  }
+}
+
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+  background: var(--color-plane);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background: var(--color-plane);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers that tick during an animation must not reflow as digits change. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Bars are scaled with transform, never width, so a 60fps tick never triggers layout.
+   Labels live outside the scaled node -- scaleX would stretch the glyphs. */
+.bar-scale {
+  transform-origin: left center;
+  will-change: transform;
+}
+
+::selection { background: color-mix(in oklab, var(--color-caller) 28%, transparent); }
