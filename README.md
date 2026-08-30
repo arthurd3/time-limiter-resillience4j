@@ -12,7 +12,7 @@
 ![Resilience4j](https://img.shields.io/badge/Resilience4j-2.4-1F6FEB)
 ![Maven](https://img.shields.io/badge/Maven-C71A36?logo=apachemaven&logoColor=white)
 
-[**How it works**](#-how-it-works) · [**Run it**](#-run-it) · [**Try it**](#-try-it) · [**Configuration**](#-configuration) · [**Gotchas**](#-gotchas) · [**Tests**](#-tests)
+[**How it works**](#-how-it-works) · [**Run it**](#-run-it) · [**Try it**](#-try-it) · [**Teaching page**](#-the-teaching-page) · [**Gotchas**](#-gotchas) · [**Tests**](#-tests)
 
 </div>
 
@@ -111,6 +111,24 @@ curl -s "localhost:8080/api/v1/weather/forecast?delayMs=-1"
 | --- | --- | --- | --- |
 | `GET` | `/api/v1/weather/forecast` | `delayMs` — optional, `0`–`30000` | Below the time limit → `UPSTREAM`. Above it → `FALLBACK`. Omitted → uses `demo.weather.default-delay` (5s), so it falls back. |
 
+## 📖 The teaching page
+
+`frontend/` holds an interactive explanation of everything below — why an unbounded call is
+dangerous, what the deadline actually bounds, and both traps — with simulations you can drive and
+live calls against your own running instance.
+
+```bash
+./mvnw spring-boot:run          # terminal 1 — the API on :8080
+cd frontend && npm ci && npm run dev   # terminal 2 — the page on :5173
+```
+
+The dev server proxies `/api` and `/actuator`, so the page and the API are same-origin and no CORS
+setup is involved. Every section except the last works with the API stopped.
+
+The simulations are pure functions in [`frontend/src/sim/`](frontend/src/sim), unit-tested against
+the same behaviour this README describes — including the assertion that a timeout never shortens
+the worker's run.
+
 ## ⚙️ Configuration
 
 All of it lives in [`src/main/resources/application.yml`](src/main/resources/application.yml).
@@ -121,6 +139,7 @@ All of it lives in [`src/main/resources/application.yml`](src/main/resources/app
 | `resilience4j.timelimiter.instances.weatherForecast.cancel-running-future` | `true` | Cancels the wrapper future on timeout — but read [Gotchas](#-gotchas) before trusting it to stop the work. |
 | `demo.weather.default-delay` | `5s` | Latency the simulated upstream uses when `?delayMs` is omitted. |
 | `spring.mvc.problemdetails.enabled` | `true` | Makes Spring MVC render its own exceptions as RFC 9457 problem details. |
+| `demo.cors.allowed-origins` | `localhost:5173`, `localhost:4173` | Origins allowed to call the API directly. Unused when the page runs through the dev-server proxy. An explicit list rather than `*`, deliberately. |
 
 ## ⚠️ Gotchas
 
@@ -227,7 +246,13 @@ src/main/java/com/arthur/timelimiter/
 │   ├── ForecastResponse.java        record + Source enum
 │   └── WeatherDemoProperties.java   binds demo.weather.*
 └── common/
-    └── GlobalExceptionHandler.java  RFC 9457 problem details
+    ├── GlobalExceptionHandler.java  RFC 9457 problem details
+    └── CorsConfig.java              allows the teaching page's origin
+
+frontend/src/
+├── sim/                  pure, deterministic simulation models (unit-tested)
+├── components/           the shared timeline, controls, charts
+└── sections/             one component per teaching beat
 ```
 
 Packages are organised **by feature** rather than by layer: with a single feature, a
