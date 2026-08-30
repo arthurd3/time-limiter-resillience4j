@@ -96,6 +96,7 @@ export function CallTimeline({
   const orphanBar = useRef<HTMLDivElement>(null)
   const playhead = useRef<HTMLDivElement>(null)
   const readout = useRef<HTMLSpanElement>(null)
+  const scrubber = useRef<HTMLInputElement>(null)
 
   // Only discrete changes go through React. The bars are written to directly, every frame.
   const [settled, setSettled] = useState(false)
@@ -109,6 +110,10 @@ export function CallTimeline({
       setBar(orphanBar.current, call.caller.releasedAtMs, f.workerElapsedMs, scaleMs)
       if (playhead.current) playhead.current.style.transform = `translateX(${(t / scaleMs) * 100}%)`
       if (readout.current) readout.current.textContent = msTicking(t)
+      // Don't fight the reader while they are dragging the scrubber.
+      if (scrubber.current && document.activeElement !== scrubber.current) {
+        scrubber.current.value = String(t)
+      }
       setSettled((prev) => (prev === f.callerDone ? prev : f.callerDone))
     },
     { autoPlay, loop },
@@ -150,11 +155,27 @@ export function CallTimeline({
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={controls.replay}
-            className="rounded-md border border-hairline px-3 py-1 text-xs font-medium hover:bg-grid/40"
+            className="shrink-0 rounded-md border border-hairline px-3 py-1 text-xs font-medium hover:bg-grid/40"
           >
             {controls.playing ? t.ui.replay : t.ui.play}
           </button>
-          <span className="tnum font-mono text-xs text-ink-muted">
+          {/* Scrubbing matters more than playing here: the interesting moment is a single
+              instant after the deadline, and a reader should be able to sit on it. */}
+          <input
+            ref={scrubber}
+            type="range"
+            min={0}
+            max={scaleMs}
+            step={10}
+            defaultValue={0}
+            aria-label={t.ui.scrub}
+            onChange={(e) => {
+              controls.pause()
+              controls.seek(Number(e.target.value))
+            }}
+            className="h-1 min-w-32 flex-1 accent-caller"
+          />
+          <span className="tnum shrink-0 font-mono text-xs text-ink-muted">
             t = <span ref={readout}>0.00 s</span>
           </span>
           {settled && <Outcome outcome={call.caller.outcome} />}

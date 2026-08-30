@@ -18,6 +18,7 @@ const en = {
     play: 'Play',
     replay: 'Replay',
     inferred: 'inferred',
+    scrub: 'Scrub the timeline',
     outcomeNotes: {
       UPSTREAM: 'the dependency answered in time',
       FALLBACK: 'the deadline fired and the fallback answered',
@@ -195,6 +196,7 @@ const pt: Copy = {
     play: 'Rodar',
     replay: 'Repetir',
     inferred: 'inferido',
+    scrub: 'Arraste a linha do tempo',
     outcomeNotes: {
       UPSTREAM: 'a dependência respondeu a tempo',
       FALLBACK: 'o prazo estourou e o fallback respondeu',
