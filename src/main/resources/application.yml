@@ -1,6 +1,9 @@
 spring:
   application:
     name: time-limiter
+  mvc:
+    problemdetails:
+      enabled: true          # RFC 9457 bodies for Spring MVC's own exceptions (e.g. bad delayMs)
 
 resilience4j:
   timelimiter:
