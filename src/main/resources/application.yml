@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: time-limiter
+
+resilience4j:
+  timelimiter:
+    instances:
+      weatherForecast:
+        timeout-duration: 2s
+        # Cancels the wrapper future on timeout. Note this cannot interrupt a task already running
+        # on the common ForkJoinPool -- see the "Gotchas" section of the README.
+        cancel-running-future: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,timelimiters,timelimiterevents
+
+demo:
+  weather:
+    default-delay: 5s        # simulated upstream latency when the request omits ?delayMs
