@@ -1,6 +1,5 @@
-package com.arthur.timelimiter.controller;
+package com.arthur.timelimiter.weather;
 
-import com.arthur.timelimiter.service.WeatherService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
