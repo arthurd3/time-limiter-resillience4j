@@ -1,4 +1,5 @@
 import type { CallOutcome } from '../sim/timeLimiter'
+import { useCopy } from '../i18n/locale'
 
 /**
  * An outcome badge. The colour is never the only signal.
@@ -7,29 +8,17 @@ import type { CallOutcome } from '../sim/timeLimiter'
  * the same colour for a red-green reader -- and `warning` at 1.79:1 on the light surface. So each
  * badge carries a glyph and a word, and the colour is decoration on top of a signal that already
  * works without it.
+ *
+ * The labels stay in English in every locale: they are the literal values the API returns.
  */
-const SPEC: Record<CallOutcome, { glyph: string; label: string; cls: string; note: string }> = {
-  UPSTREAM: {
-    glyph: '●',
-    label: 'UPSTREAM',
-    cls: 'text-good border-good',
-    note: 'the dependency answered in time',
-  },
-  FALLBACK: {
-    glyph: '▲',
-    label: 'FALLBACK',
-    cls: 'text-warning border-warning',
-    note: 'the deadline fired and the fallback answered',
-  },
-  ERROR: {
-    glyph: '✕',
-    label: '504',
-    cls: 'text-critical border-critical',
-    note: 'the deadline fired and no fallback resolved',
-  },
+const SPEC: Record<CallOutcome, { glyph: string; label: string; cls: string }> = {
+  UPSTREAM: { glyph: '●', label: 'UPSTREAM', cls: 'text-good border-good' },
+  FALLBACK: { glyph: '▲', label: 'FALLBACK', cls: 'text-warning border-warning' },
+  ERROR: { glyph: '✕', label: '504', cls: 'text-critical border-critical' },
 }
 
 export function Outcome({ outcome, showNote = false }: { outcome: CallOutcome; showNote?: boolean }) {
+  const { t } = useCopy()
   const spec = SPEC[outcome]
   return (
     <span className="inline-flex items-baseline gap-2">
@@ -39,7 +28,7 @@ export function Outcome({ outcome, showNote = false }: { outcome: CallOutcome; s
         <span aria-hidden="true">{spec.glyph}</span>
         {spec.label}
       </span>
-      {showNote && <span className="text-sm text-ink-2">{spec.note}</span>}
+      {showNote && <span className="text-sm text-ink-2">{t.ui.outcomeNotes[outcome]}</span>}
     </span>
   )
 }

@@ -4,6 +4,8 @@ import { Choice, Stat } from '../components/Controls'
 import { Outcome } from '../components/Outcome'
 import { subscribeToFrames } from '../lib/clock'
 import { ms, msTicking } from '../lib/format'
+import { useCopy } from '../i18n/locale'
+import { P, RichText } from '../i18n/RichText'
 import {
   callForecast,
   fetchTimeLimiterCounts,
@@ -16,24 +18,25 @@ import {
 const SCALE_MS = 6000
 const DEADLINE_MS = 2000
 
-const PRESETS = [
-  { value: '100', label: '100 ms' },
-  { value: '1900', label: '1900 ms' },
-  { value: '2100', label: '2100 ms' },
-  { value: '5000', label: '5000 ms' },
-  { value: 'omit', label: 'omit param' },
-  { value: '40000', label: '40000 (invalid)' },
-] as const
-
-type Preset = (typeof PRESETS)[number]['value']
+type Preset = '100' | '1900' | '2100' | '5000' | 'omit' | '40000'
 
 export function LivePanel() {
+  const { t } = useCopy()
   const [up, setUp] = useState<boolean | null>(null)
   const [preset, setPreset] = useState<Preset>('5000')
   const [inFlight, setInFlight] = useState(false)
   const [result, setResult] = useState<LiveResult | null>(null)
   const [delta, setDelta] = useState<TimeLimiterCounts | null>(null)
   const ticker = useRef<HTMLSpanElement>(null)
+
+  const presets: { value: Preset; label: string }[] = [
+    { value: '100', label: '100 ms' },
+    { value: '1900', label: '1900 ms' },
+    { value: '2100', label: '2100 ms' },
+    { value: '5000', label: '5000 ms' },
+    { value: 'omit', label: t.live.omitParam },
+    { value: '40000', label: t.live.invalid },
+  ]
 
   useEffect(() => {
     let cancelled = false
@@ -80,19 +83,17 @@ export function LivePanel() {
   const requested = preset === 'omit' ? 5000 : Number(preset)
   const observed = result?.observedLatencyMs ?? 0
   const pct = (v: number) => `${Math.min(100, (v / SCALE_MS) * 100)}%`
+  const deltaLabel = delta?.timeout
+    ? t.live.timeoutDelta.replace('{n}', String(delta.timeout))
+    : t.live.successDelta.replace('{n}', String(delta?.successful ?? 0))
 
   return (
-    <Section id="live" eyebrow="§6" title="Now against a real server">
-      <p>
-        Everything above was a model. This section calls the actual Spring Boot app in this
-        repository and times it in your browser with{' '}
-        <code className="font-mono text-[13px]">performance.now()</code> &mdash; so the number below
-        is what you would have waited, not what the server claims.
-      </p>
+    <Section id="live" eyebrow="§6" title={t.live.title}>
+      <P>{t.live.p1}</P>
 
       <Panel>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Choice value={preset} onChange={setPreset} options={PRESETS.map((p) => ({ ...p }))} />
+          <Choice value={preset} onChange={setPreset} options={presets} />
           <span className="flex items-center gap-2 text-xs">
             <span
               className="inline-block size-2 rounded-full"
@@ -103,20 +104,18 @@ export function LivePanel() {
               aria-hidden="true"
             />
             <span className="text-ink-muted">
-              {up === null ? 'checking API…' : up ? 'API reachable' : 'API not reachable'}
+              {up === null ? t.live.checking : up ? t.live.reachable : t.live.unreachable}
             </span>
           </span>
         </div>
 
         {up === false && (
           <div className="mb-4 rounded-lg border border-hairline bg-plane p-3 text-sm text-ink-2">
-            <p className="mb-2">Start the API, then press Run:</p>
+            <p className="mb-2">{t.live.startPrompt}</p>
             <pre className="overflow-x-auto font-mono text-[12px]">
 {`JAVA_HOME=/usr/lib/jvm/java-25-openjdk ./mvnw spring-boot:run`}
             </pre>
-            <p className="mt-2 text-xs text-ink-muted">
-              Everything above this section works without it.
-            </p>
+            <p className="mt-2 text-xs text-ink-muted">{t.live.worksWithout}</p>
           </div>
         )}
 
@@ -126,11 +125,11 @@ export function LivePanel() {
             disabled={inFlight}
             className="rounded-lg bg-caller px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {inFlight ? 'Running…' : 'Send a real request'}
+            {inFlight ? t.live.running : t.live.send}
           </button>
           {inFlight && (
             <span className="tnum font-mono text-sm text-ink-2">
-              elapsed <span ref={ticker}>0.00 s</span>
+              {t.hang.elapsed} <span ref={ticker}>0.00 s</span>
             </span>
           )}
         </div>
@@ -140,7 +139,7 @@ export function LivePanel() {
             {/* Two bars on the page's usual scale: one measured, one inferred. */}
             <div className="relative mb-4 flex flex-col gap-2">
               <div className="grid grid-cols-[7.5rem_1fr] items-center gap-3">
-                <div className="text-right text-xs font-semibold">caller</div>
+                <div className="text-right text-xs font-semibold">{t.ui.caller}</div>
                 <div className="relative h-6 overflow-hidden rounded-md bg-grid/50">
                   <div
                     className="absolute inset-y-1 left-0 rounded bg-caller"
@@ -155,8 +154,8 @@ export function LivePanel() {
               </div>
               <div className="grid grid-cols-[7.5rem_1fr] items-center gap-3">
                 <div className="text-right">
-                  <div className="text-xs font-semibold">worker</div>
-                  <div className="text-[11px] text-ink-muted">inferred</div>
+                  <div className="text-xs font-semibold">{t.ui.worker}</div>
+                  <div className="text-[11px] text-ink-muted">{t.ui.inferred}</div>
                 </div>
                 <div className="relative h-6 overflow-hidden rounded-md bg-grid/50">
                   <div
@@ -168,15 +167,13 @@ export function LivePanel() {
             </div>
 
             <div className="mb-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-              <Stat
-                label="Measured"
-                value={ms(observed)}
-                note="browser wall clock, incl. network"
-              />
-              <Stat label="HTTP" value={result.httpStatus ? String(result.httpStatus) : '—'} />
+              <Stat label={t.live.measured} value={ms(observed)} note={t.live.measuredNote} />
+              <Stat label={t.live.http} value={result.httpStatus ? String(result.httpStatus) : '—'} />
               {isForecast(result.body) && (
                 <div>
-                  <div className="text-[11px] uppercase tracking-wide text-ink-muted">Outcome</div>
+                  <div className="text-[11px] uppercase tracking-wide text-ink-muted">
+                    {t.live.outcome}
+                  </div>
                   <Outcome outcome={result.body.source} />
                 </div>
               )}
@@ -184,7 +181,9 @@ export function LivePanel() {
 
             {result.failure ? (
               <p className="text-sm text-critical">
-                {result.failure.kind === 'unreachable' ? result.failure.hint : `Request ${result.failure.kind}.`}
+                {result.failure.kind === 'unreachable'
+                  ? result.failure.hint
+                  : t.live.failed.replace('{kind}', result.failure.kind)}
               </p>
             ) : (
               <pre className="overflow-x-auto rounded-lg border border-hairline bg-plane p-3 font-mono text-[12px] leading-5">
@@ -194,24 +193,14 @@ export function LivePanel() {
 
             {delta && (delta.successful || delta.timeout || delta.failed) ? (
               <p className="mt-3 text-sm text-ink-2">
-                The server agrees. Its own{' '}
-                <code className="font-mono text-[12px]">resilience4j.timelimiter.calls</code> counter
-                moved by{' '}
-                <b className="text-ink">
-                  {delta.timeout ? `+${delta.timeout} timeout` : `+${delta.successful} successful`}
-                </b>{' '}
-                while you were reading this.
+                <RichText values={{ delta: deltaLabel }}>{t.live.serverAgrees}</RichText>
               </p>
             ) : null}
 
             <p className="mt-3 text-xs text-ink-muted">
-              The worker bar is dashed because it is inferred, not observed: it is the delay you
-              asked the server for. A browser cannot see what a thread on the server is doing, and
-              drawing it as though it could would be a lie in a page about honesty with timing.
-              {observed > DEADLINE_MS && observed < DEADLINE_MS + 400 && (
-                <> The measured value sits a little above {ms(DEADLINE_MS)} &mdash; scheduling and
-                network, not a misconfigured deadline.</>
-              )}
+              {t.live.provenance}
+              {observed > DEADLINE_MS && observed < DEADLINE_MS + 400 &&
+                t.live.aboveDeadline.replace('{deadline}', ms(DEADLINE_MS))}
             </p>
           </div>
         )}

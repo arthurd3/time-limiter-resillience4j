@@ -3,6 +3,7 @@ import { frameAt, type SimulatedCall } from '../sim/timeLimiter'
 import { useTimeline } from '../lib/useTimeline'
 import { msTicking } from '../lib/format'
 import { Outcome } from './Outcome'
+import { useCopy } from '../i18n/locale'
 
 /**
  * The page's one timeline. Every other time-based figure reuses it, so a bar of a given length
@@ -89,6 +90,7 @@ export function CallTimeline({
   autoPlay?: boolean
   loop?: boolean
 }) {
+  const { t } = useCopy()
   const callerBar = useRef<HTMLDivElement>(null)
   const workerBar = useRef<HTMLDivElement>(null)
   const orphanBar = useRef<HTMLDivElement>(null)
@@ -117,7 +119,7 @@ export function CallTimeline({
   return (
     <div>
       <div className="grid grid-cols-[7.5rem_1fr] gap-x-3 gap-y-2">
-        <Track label="caller" sub="waiting for a response" row={1}>
+        <Track label={t.ui.caller} sub={t.ui.callerSub} row={1}>
           <Bar refEl={callerBar} style={{ fill: 'var(--color-caller)' }} />
           <div
             ref={playhead}
@@ -125,7 +127,7 @@ export function CallTimeline({
             aria-hidden="true"
           />
         </Track>
-        <Track label="worker" sub="doing the work" row={2}>
+        <Track label={t.ui.worker} sub={t.ui.workerSub} row={2}>
           <Bar refEl={workerBar} style={{ fill: 'var(--color-worker)' }} />
           <Bar refEl={orphanBar} style={{ fill: 'var(--color-warning)', hollow: true }} />
         </Track>
@@ -150,7 +152,7 @@ export function CallTimeline({
             onClick={controls.replay}
             className="rounded-md border border-hairline px-3 py-1 text-xs font-medium hover:bg-grid/40"
           >
-            {controls.playing ? 'Replay' : 'Play'}
+            {controls.playing ? t.ui.replay : t.ui.play}
           </button>
           <span className="tnum font-mono text-xs text-ink-muted">
             t = <span ref={readout}>0.00 s</span>
