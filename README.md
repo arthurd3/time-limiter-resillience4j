@@ -115,19 +115,45 @@ curl -s "localhost:8080/api/v1/weather/forecast?delayMs=-1"
 
 `frontend/` holds an interactive explanation of everything below — why an unbounded call is
 dangerous, what the deadline actually bounds, and both traps — with simulations you can drive and
-live calls against your own running instance.
+live calls against your own running instance. Available in **English and Portuguese**.
 
 ```bash
 ./mvnw spring-boot:run          # terminal 1 — the API on :8080
 cd frontend && npm ci && npm run dev   # terminal 2 — the page on :5173
 ```
 
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/01-hero.jpg" alt="The page's opening: a call with no deadline turns latency into concurrency"></td>
+<td width="50%"><img src="docs/screenshots/03-cancel-trap.jpg" alt="Timeline showing the caller released at the 2s deadline while the worker keeps running as a hollow bar"></td>
+</tr>
+<tr>
+<td><b>§1–2 — the cost, felt.</b> A real five-second wait, then a thread pool you drive into saturation.</td>
+<td><b>§5 — cancel is not interrupt.</b> The caller is released at the deadline; the worker keeps going, hollow, to 5s.</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/02-pool-exhaustion.jpg" alt="Side-by-side comparison of queue depth and upstream concurrency with and without a timeout"></td>
+<td><img src="docs/screenshots/04-live-panel.jpg" alt="Live panel showing a real 2.08s call returning FALLBACK, with the server's timeout counter confirming"></td>
+</tr>
+<tr>
+<td><b>§2 — and what it costs the dependency.</b> The timeout fixes your p99 and <i>raises</i> upstream load from 10 to 60 concurrent calls.</td>
+<td><b>§6 — against the real server.</b> Measured in the browser, with the server's own timeout counter as corroboration.</td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/05-portugues.jpg" width="70%" alt="The same page rendered in Brazilian Portuguese">
+  <br><em>The same page in Portuguese — one toggle, no separate build.</em>
+</p>
+
 The dev server proxies `/api` and `/actuator`, so the page and the API are same-origin and no CORS
 setup is involved. Every section except the last works with the API stopped.
 
 The simulations are pure functions in [`frontend/src/sim/`](frontend/src/sim), unit-tested against
 the same behaviour this README describes — including the assertion that a timeout never shortens
-the worker's run.
+the worker's run. Copy for both languages lives in
+[`frontend/src/i18n/copy.ts`](frontend/src/i18n/copy.ts); the type makes a missing translation a
+compile error, and a test checks that no `{placeholder}` was lost in translation.
 
 ## ⚙️ Configuration
 
@@ -251,6 +277,7 @@ src/main/java/com/arthur/timelimiter/
 
 frontend/src/
 ├── sim/                  pure, deterministic simulation models (unit-tested)
+├── i18n/                 en/pt copy, and the inline-markup renderer
 ├── components/           the shared timeline, controls, charts
 └── sections/             one component per teaching beat
 ```
