@@ -273,7 +273,8 @@ src/main/java/com/arthur/timelimiter/
 │   └── WeatherDemoProperties.java   binds demo.weather.*
 └── common/
     ├── GlobalExceptionHandler.java  RFC 9457 problem details
-    └── CorsConfig.java              allows the teaching page's origin
+    ├── CorsConfig.java              allows the teaching page's origin
+    └── CorsProperties.java          binds demo.cors.*
 
 frontend/src/
 ├── sim/                  pure, deterministic simulation models (unit-tested)
